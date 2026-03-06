@@ -60,6 +60,7 @@ async function enforceSeoDescriptionRequired() {
 
     let updatedCount = 0;
     let publishedCount = 0;
+    let publishedEntries = [];
 
     for (const contentType of allContentTypes) {
       const seoField = contentType.fields.find(
@@ -76,7 +77,7 @@ async function enforceSeoDescriptionRequired() {
 
           let updatedContentType;
           try {
-            updatedContentTy?pe = await contentType.update();
+            updatedContentType = await contentType.update();
             updatedCount++;
           } catch (updateError) {
             console.error(`Failed to update content type: ${contentType.name}. Error: ${updateError.message}`);
@@ -86,6 +87,10 @@ async function enforceSeoDescriptionRequired() {
           try {
             await updatedContentType.publish();
             publishedCount++;
+            publishedEntries.push({
+              id: contentType.sys.id,
+              name: contentType.name
+            });
             console.log(`Published updated Content Type: ${contentType.name}`);
           } catch (publishError) {
             console.error(`Failed to publish content type: ${contentType.name}. Error: ${publishError.message}`);
@@ -99,6 +104,7 @@ async function enforceSeoDescriptionRequired() {
     }
 
     console.log(`Completed! Updated ${updatedCount}, published ${publishedCount} content type(s).`);
+    return { updatedCount, publishedCount, publishedEntries };
   } catch (error) {
     console.error('Error occurred:', error.message);
     throw error;
@@ -107,10 +113,15 @@ async function enforceSeoDescriptionRequired() {
 
 app.post('/enforceSeoDescriptionRequired', async (req, res) => {
   try {
-    await enforceSeoDescriptionRequired();
+    const result = await enforceSeoDescriptionRequired();
     res.status(200).json({ 
       success: true, 
-      message: 'SEO Description enforcement completed successfully.' 
+      message: 'SEO Description enforcement completed successfully.',
+      data: {
+        updatedCount: result.updatedCount,
+        publishedCount: result.publishedCount,
+        publishedEntries: result.publishedEntries
+      }
     });
   } catch (error) {
     console.error('API Error:', error.message);
