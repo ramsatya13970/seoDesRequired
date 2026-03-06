@@ -45,13 +45,23 @@ async function enforceSeoDescriptionRequired() {
 
     console.log(`Connected to environment: ${CONTENTFUL_ENVIRONMENT_ID}`);
 
-    const contentTypes = await environment.getContentTypes();
-    console.log(`Fetched ${contentTypes.items.length} content type(s).`);
+    // Fetch all content types with pagination
+    let allContentTypes = [];
+    let skip = 0;
+    const limit = 100; // Maximum allowed by Contentful API
+    while (true) {
+      const response = await environment.getContentTypes({ limit, skip });
+      allContentTypes = allContentTypes.concat(response.items);
+      if (allContentTypes.length >= response.total) break;
+      skip += limit;
+    }
+
+    console.log(`Fetched ${allContentTypes.length} content type(s).`);
 
     let updatedCount = 0;
     let publishedCount = 0;
 
-    for (const contentType of contentTypes.items) {
+    for (const contentType of allContentTypes) {
       const seoField = contentType.fields.find(
         (field) => field.id === 'seoDescription'
       );
@@ -64,19 +74,20 @@ async function enforceSeoDescriptionRequired() {
 
           seoField.required = true;
 
+          let updatedContentType;
           try {
-          const updatedContentType = await contentType.update();
-          updatedCount++;
-          }catch (updateError) {
+            updatedContentTy?pe = await contentType.update();
+            updatedCount++;
+          } catch (updateError) {
             console.error(`Failed to update content type: ${contentType.name}. Error: ${updateError.message}`);
             continue; // Skip to the next content type
           }
 
-          try{
+          try {
             await updatedContentType.publish();
             publishedCount++;
             console.log(`Published updated Content Type: ${contentType.name}`);
-          }catch (publishError) {
+          } catch (publishError) {
             console.error(`Failed to publish content type: ${contentType.name}. Error: ${publishError.message}`);
             continue; // Skip to the next content type
           }
