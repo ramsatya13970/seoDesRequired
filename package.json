@@ -1,0 +1,14 @@
+{
+  "name": "contentful-seo-enforcer",
+  "version": "1.0.0",
+  "description": "Enforce required validation on seoDescription field for all Contentful content types",
+  "main": "enforceSeoRequired.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "contentful-management": "^10.0.0",
+    "dotenv": "^16.4.5"
+  }
+}

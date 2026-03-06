@@ -1,0 +1,8 @@
+# Node modules
+node_modules/
+
+# dotenv environment variables
+.env
+
+#logs
+logs/
